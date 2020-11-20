@@ -46,7 +46,7 @@ page_sections:
       Quickly assemble and create custom sites with 16 design blocks for seven
       different sections.
     media:
-      image: "/uploads/2018/06/21/blocks-split.png"
+      image: "./uploads/2018/06/21/blocks-split.png"
       alt_text: uBuild Blocks Mock-Up
   - template: content-feature
     block: feature-1
@@ -59,7 +59,7 @@ page_sections:
       Each block comes with custom Front Matter that can be edited in
       Forestry CMS.
     media:
-      image: "/uploads/2018/06/21/edit.gif"
+      image: "./uploads/2018/06/21/edit.gif"
       alt_text: Customize Blocks
   - template: 1-column-text
     block: one-column-1
