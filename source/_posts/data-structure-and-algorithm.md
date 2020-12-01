@@ -807,9 +807,227 @@ console.log(myLink.getHead()) //A
 console.log(myLink.getTail()) //C
 ```
 
+2、最后总结一下，双向链表相对于单链表来说，是要更复杂一点，每个结点多了一个prior指针，对于插入和删除操作的顺序大家要格外小心。
+
+3、不过，双向链表可以有效提高算法的时间性能，说白了就是用空间来换取时间。
+
+### 栈和队列
+
+1、栈是一种重要的线性结构，可以这样讲，栈是前面讲过的线性表的一种具体形式。
+
+2、生活中有很多例子跟栈的特性非常相似，例如子弹的入膛和发射，编码和撤销，网站的前进和后退等等
+
+3、官方定义：栈（Stack）是一个后进先出（Last in first out,LIFO）的线性表，它要求只在表尾进行删除和插入操作。
+
+4、通俗来讲所谓的栈，其实也就是一个特殊的线性表（顺序表、链表），但是它在操作上有一些特殊的要求和限制：
+
+- 栈的元素必须“后进先出”。
+- 栈的操作只能在这个线性表的表尾进行。
+- 注：对于栈来说，这个表尾称为栈的栈顶（top），相应的表头称为栈底（bottom）。
+
+5、栈的插入操作（Push），叫做进栈，也称为压栈，入栈。类似子弹放入弹夹的动作。
+
+6、栈的删除操作（Pop），叫做出栈，也称为弹栈。如同弹夹中的子弹出夹。
+
+```
+function Stack(){
+    this.dataStore = [];
+    this.top = 0;
+    this.push = push;
+    this.pop = pop;
+    this.peek = peek;
+    this.clear = clear;
+    this.length = length;
+    this.printElement = printStack;
+
+    //注意++操作符的位置，它放在this.top的后面，这样新入栈的元素就被放在top的当前位置对应的位置，同时top自加1，指向下一个位置
+    function push(element){
+        this.dataStore[this.top++] = element;
+    }
+    //返回栈顶元素，同时top的位置减1
+    function pop(){
+        return this.dataStore[--this.top];
+    }
+    //peek()方法返回数组的第top-1个位置的元素，即栈顶元素
+    function peek(){
+        return this.dataStore[this.top-1];
+    }
+    //将top的值设置0，即清空一个栈
+    function clear(){
+        this.top = 0;
+    }
+    //返回变量top的值即为栈内元素的个数
+    function length(){
+        return this.top;
+    }
+    
+    //输出栈内元素
+    function printStack(){
+        while (this.top>0){
+            console.log(this.pop()+"&nbsp;&nbsp;");
+        }
+    }
+}
+```
+
+7、栈的实践：计算 (1-2)*(4+5)
+
+- 我们数值加减乘除和括号的优先级，但是要用计算机实现就需要很多if判断
+- 于是乎，一个波兰逻辑学家，发明了一种后缀表达式，上面的式子用后缀表达式来表示的话应该是这样1 2 – 4 5 + * 
+- 这样的例子对于计算机来说是处理起来是非常的方便，用栈的特性可以很轻松的获取结果
+- 我们先将1 2入栈，然后碰到-号计算结果入栈然后将4 5入栈碰到+号计算结果入栈最后碰到*号计算结果出栈，得出结果为-9
+  
+|   |
+|  ---- |
+|   |
+|   |
+|   |
+| 2  |
+| 1  |
+
+|   |
+|  ---- |
+|   |
+|   |
+| 5 |
+| 4  |
+| -1  |
+
+|   |
+|  ---- |
+|   |
+|   |
+|  |
+| 9  |
+| -1  |
+
+8、如和将中缀表达式转化为后缀表达式呢，例如1+(2-3)*4+10/5如何用后缀表达式表示
+```
+function suffixExpression(stri){
+    var str = stri;
+    var stack = new Stack();
+    var outStack = new Array();
+    for (var i = 0; i < str.length; ++i) {
+        if (')' == str[i]) {
+            while (true) {
+                var top = stack.peek();
+                stack.pop();
+                if('(' != top) {
+                    outStack.push(top);
+                } else {
+                    break;
+                }
+            }
+        } else if (['-','+'].indexOf(str[i]) >- 1) {
+            if (['*','/'].indexOf(stack.peek()) > -1) {
+                while (['*','/'].indexOf(stack.peek()) > -1) {
+                    outStack.push(stack.peek());
+                    stack.pop();
+                }
+                outStack.push(str[i]);
+            } else {
+                stack.push(str[i]);
+            }
+        } else if(['(','*','/'].indexOf(str[i]) > -1) {
+            stack.push(str[i]);
+        } else {
+            outStack.push(str[i]);
+        }        
+    }
+
+    while(stack.top) {
+        outStack.push(stack.pop());
+    }
+    
+    console.log(outStack);
+}
+suffixExpression('a+b*c+(d*e+f)*g');
+```
+
+### 队列
+
+1、队列（queue）是只允许在一端进行插入操作，而在另一端进行删除操作的线性表。
+
+1、与栈相反，队列是一种先进先出（First In First Out, FIFO）的线性表。
+
+### 递归与分治思想
+
+### 递归
+
+1、斐波那契数列的递归实现
+
+|  1 |  1 |  2 |  3 |  5 |  8 |  13 |
+| ---- | ---- | ---- | ---- | ---- | ---- | ---- |
 
 
+```
+const rtc = [];
+function abc(a = 0, b = 1) {
+    if (rtc.length < 12) {
+        rtc.push(a + b);
+        abc(b, a + b);
+    }
+}
+console.log(rtc);
+```
 
+2、我们把一个直接调用自己或通过一系列的调用语句间接地调用自己的函数，称作递归函数。
+
+3、写递归程序最怕的就是陷入永不结束的无穷递归中。切记，每个递归定义必须至少有一个条件，当满足这个条件时递归不再进行，即函数不再调用自身而是返回值。
+
+4、使用递归能使程序的结构更清晰、更简洁、更容易让人理解，从而减少读懂代码的时间。
+
+5、例如用迭代的方法获取斐波那契数列就不容易理解
+```
+const rtc = [];
+function F(n) {
+    if (n == 0) {
+        return 0;    
+    }
+
+    if (n == 1) {
+        return 1;
+    }
+
+    if (n > 1) {
+        return F(n - 1) + F(n - 2);
+    }
+}
+
+for (var a = 1; a <= 12; a++) {
+    rtc.push(F(a));
+}
+console.log(rtc);
+```
+
+### 分治思想
+
+1、分治思想在算法设计中也是非常常见的，当一个问题规模较大且不易求解的时候，就可以考虑将问题分成几个小的模块，逐一解决。
+
+2、分治思想和递归算是有亲兄弟的关系了，因为采用分治思想处理问题，其各个小模块通常具有与大问题相同的结构，这种特性也使递归技术有了用武之地。我们接下来通过实例来讲解。
+
+3、汉诺塔问题
+
+- 问题描述：一位法国数学家曾编写过一个印度的古老传说：在世界中心贝拿勒斯的圣庙里，一块黄铜板上插着三根宝石针。印度教的主神梵天在创造世界的时候，在其中一根针上从下到上地穿好了由大到小的64片金片，这就是所谓的汉诺塔。不论白天黑夜，总有一个僧侣在按照下面的法则移动这些金片：一次只移动一片，不管在哪根针上，小片必须在大片上面。
+
+```
+ // 递归算法
+let c = 0;
+function move(n, x, y, z) {
+    function director(x, z, n) {
+        c++;
+        console.log(`第${c}次移动,将第${n}个盘子从${x}移动到${z}`);
+    }
+    if (n == 1) {
+        director(x, z, 1);
+    } else {
+        director(x, z, n);
+        move(n - 1, x, z, y);
+        move(n - 1, y, x, z);
+    }
+}
+move(3 "x", "y", "z");
+```
 
 
 
