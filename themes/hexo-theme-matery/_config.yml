@@ -538,8 +538,8 @@ subtitle:
   enable: true
   loop: false # 是否循环
   showCursor: false # 是否显示光标
-  startDelay: 300 # 开始延迟
-  typeSpeed: 100 # 打字速度
+  startDelay: 0 # 开始延迟
+  typeSpeed: 200 # 打字速度
   backSpeed: 50 # 删除速度
   sub1: 那是遥不可及之地
 
@@ -562,6 +562,13 @@ icp:
   enable: false
   url: # 备案链接
   text: # 备案信息
+
+# mermaid chart
+mermaid: ## mermaid url https://github.com/knsv/mermaid
+  enable: true  # default true
+  version: "7.1.2" # default v7.1.2
+  # options:  # find more api options from https://github.com/knsv/mermaid/blob/master/src/mermaidAPI.js
+  #   startOnload: true  // default true
 
 # CDN访问加速 
 # 第一次使用本功能，一定要先配置url，再`hexo cl && hexo g && hexo d`部署到GitHub的仓库，注意！必须是GitHub的仓库！
