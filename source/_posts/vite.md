@@ -164,6 +164,7 @@ npm i --save vite-plugin-externals
 ```
 使用
 ```
+import { viteExternalsPlugin } from 'vite-plugin-externals';
 export default {
     plugins: [
         viteExternalsPlugin({
@@ -177,13 +178,30 @@ export default {
 
 
 在比如预构建虽然帮我们解决了npm包中的commonjs等模块化的问题，
-但是项目中的依然会有require，module等共存的情况，虽然可以使用optimizeDeps.include强制进行构建，但是如此重复的劳动显然不符合我们的开发理念，人和动物区别也在此，人可以使用工具来提高生产效率。
+但是项目中的依然会有require，module等共存的情况，虽然可以使用optimizeDeps.include强制进行构建，但是如此重复的劳动显然不符合我们的开发理念，可以使用工具来提高生产效率。
 
 这里我们依然使用插件来处理这个问题
 
 旧的项目中碰到的同类问题基本都可以使用插件来做
 
 这里以mudule，require为例写一个cjs转ESM的插件
+
+vite插件需要满足rullup插件编写规范，它提供了许多有用的钩子会在运行的各个生命周期中执行
+
+![plugin](./plugin.jpeg)
+
+通过文档得知
+
+以下钩子会在每个传入模块请求时被调用：
+
+resolveId
+load
+transform
+
+因为本次需要处理文件，因此resolveId首先被排除，
+然后来看一下load和transform可以为我们提供那些参数
+通过观察和文档发现，load钩子只会提供一个文件路经，这很明显不符合我们的要求
+因此这里使用transform钩子
 
 首先需要定义一个函数放在plugins中并执行
 ```
@@ -201,4 +219,102 @@ export default {
 }
 ```
 
-这个函数返回一个对象，包含一个插件名称，还有一个transform属性，是一个函数，
+这个函数返回一个对象，包含一个插件名称，还有一个transform属性，是一个函数
+然后该函数应该接受一个对象，对象中应该包含插件中需要的一些配置信息，当然我们也可以给定一些默认值
+```
+const { exclude = ['node_modules'], sourceDir = '', extensions = ['.jsx', '.js'] } = options;
+```
+这里exclude是需要插件要排除的文件目录
+sourceDir可以指定要处理的文件所在的目录
+extensions指定要处理的文件的后缀
+
+然后根据这些判断对文件路径进行匹配，对于不符合要求的文件直接略过
+
+```
+ if (!Array.isArray(extensions)) {
+    throw 'extensions 应该为数组';
+}
+
+if (extensions.indexOf(extname) < 0) {
+    return null;
+}
+
+if (excludeResolve.findIndex((url) => id.indexOf(url) >= 0) >= 0) {
+    return null;
+}
+```
+
+然后需要更进一步的缩小文件的范围，对于不包含“export.”，“module.export”，“require”，“module.”的文件直接剔除
+
+```
+if (!/(exports[\.\[]|module\.exports|require\(|module\.)/.test(code) {
+    return null;
+}
+```
+
+然后将得到的代码解析成抽象语法树
+
+```
+import * as parser from "@babel/parser";
+
+let ast;
+
+try {
+    ast = parser.parse(code);
+} catch {
+    ast = parser.parse(code, { sourceType: 'module' });
+}
+```
+
+遍历整个抽象语法树并绑定对应的钩子函数
+可以通过在线的抽象语法树网站[抽象语法树网站](https://astexplorer.net/)查看应该使用哪个钩子
+这里使用MemberExpression，AssignmentExpression这两个表达式钩子
+
+```
+import traverse from "@babel/traverse";
+
+traverse(ast, {
+    // 表达式钩子
+    MemberExpression(path) {
+    },
+    // 赋值表达式钩子
+    AssignmentExpression(operator) {
+    },
+});
+```
+
+确认好使用何种钩子之后，然后加一些判断确认修改范围，避免误伤。
+然后[替换](https://github.com/jamiebuilds/babel-handbook/blob/master/translations/en/plugin-handbook.md#babel-traverse)目标
+因为我们需要替换一个表达式，因此需要生产一个新的表达式
+这里使用t.memberExpression函数生成，对象标识符用t.identifier函数生成
+这样就成功把一个ejs转换成为了ESM
+```
+traverse(ast, {
+    // 表达式钩子
+    MemberExpression(path) {
+        const node = path.node;
+
+        if (
+        getName(node, 'object') === 'module'
+        && getName(node, 'property') === 'hot'
+        ) {
+        path.replaceWith(
+            t.memberExpression(
+            t.identifier('import.meta'),
+            t.identifier('hot'),
+            ),
+        )
+    },
+});
+```
+
+最后将处理好的AST输出为js，这里使用generate包完成
+
+```
+import generate from "@babel/generator";
+generate(ast);
+```
+
+到此我们就完成了一个ejs转ESM的插件，非常简单。
+
+之后就可以使用vite愉快的进行开发了
