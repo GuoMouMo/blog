@@ -470,7 +470,7 @@
 <li>诟病与webpack在大型项目本地开发中速度低下，使得市场急需一种解决方案。</li>
 </ul>
 <h2 id="初衷"><a href="#初衷" class="headerlink" title="初衷"></a>初衷</h2><p>webpack等构建工具是时代的产物，它使前端开发者们更加高效，和有条理的管理我们的项目，并且优雅的使用各种框架，不用过多考虑新语法的兼容性，通过插件系统高效的处理一系列同等问题等。对于高速发展的前端来说，具有举足轻重的地位。</p>
-<p>然而面对大型应用，需要处理的文件和代码量很多，这时传统的构建方式开始出现弊端，当我们启动一个前端项目时，需要等待数分钟或者数十分钟来等待，即使使用热更新也需要数秒。这对于一个追求极致效率的前端开发者来说是不能忍受的。因此，vite诞生了，vite旨在利用生态系统中的新进展来解决上述问题：即ESM</p>
+<p>然而面对大型应用，需要处理的文件和代码量很多，这时传统的构建方式开始出现弊端，当我们启动一个前端项目时，需要等待数分钟或者数十分钟来等待，即使使用热更新也需要数秒。这对于一个追求极致效率的前端开发者来说是不能忍受的。因此，vite诞生了，vite旨在利用生态系统中的新进展来解决上述问题</p>
 <h2 id="原理"><a href="#原理" class="headerlink" title="原理"></a>原理</h2><p>这里有一个问题，为什么vite比传统构建方式快？</p>
 <p>这里使用webpack和vite进行对比。</p>
 <h3 id="webpack简述"><a href="#webpack简述" class="headerlink" title="webpack简述"></a>webpack简述</h3><p>首先对于<a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/363928061">webpack的原理</a>进行简单的了解。</p>
@@ -478,7 +478,7 @@
 <p>webpack构建过程可以简单理解为，通过入口文件中的require和import递归解析出整个项目的文件依赖关系，然后进行整合出bundler文件的过程。</p>
 <p>期间会使用各种loader将不同类型的文件解析为AST</p>
 <p>在构建过程中或者递归AST时触发相应的插件增强功能</p>
-<h3 id="vite原理"><a href="#vite原理" class="headerlink" title="vite原理"></a>vite原理</h3><p>通过<a target="_blank" rel="noopener" href="https://cn.vitejs.dev/guide/why.html#slow-server-start">vite中文网</a>所述，Vite 通过在一开始将应用中的模块区分为 依赖 和 源码 两类，改进了开发服务器启动时间。</p>
+<h3 id="vite原理"><a href="#vite原理" class="headerlink" title="vite原理"></a>vite原理</h3><p>通过<a target="_blank" rel="noopener" href="https://cn.vitejs.dev/guide/why.html#slow-server-start">vite中文网</a>所述，先对vite有一个认识。Vite 通过在一开始将应用中的模块区分为 依赖 和 源码 两类，改进了开发服务器启动时间。</p>
 <ul>
 <li><p>依赖 大多为在开发时不会变动的纯 JavaScript。一些较大的依赖（例如有上百个模块的组件库）处理的代价也很高。依赖也通常会存在多种模块化格式（例如 ESM 或者 CommonJS）。</p>
 </li>
@@ -487,12 +487,31 @@
 <li><p>源码 通常包含一些并非直接是 JavaScript 的文件，需要转换（例如 JSX，CSS 或者 Vue/Svelte 组件），时常会被编辑。同时，并不是所有的源码都需要同时被加载（例如基于路由拆分的代码模块）。</p>
 </li>
 </ul>
-<p>由此可以得出vite具有以下特点</p>
+<p>由此可以得出vite具有的特质</p>
 <ul>
 <li>使用ESM来处理模块之间的关系</li>
 <li>去掉打包步骤</li>
 <li>实现按需加载</li>
 </ul>
+<p>然后我们试想，如果是你，要用原生模块化写一个这样的工具应该怎么做。</p>
+<p>1、第一步是不是应该新建一个项目</p>
+<p>2、然后是不是应该初始化, 然后搞一个可以监控命令行的cli</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">npm init</span><br><span class="line"></span><br><span class="line">npm i --save cac</span><br></pre></td></tr></table></figure>
+
+<p>搞完这些之后，需要搞一个静态资源服务器，这里使用koa搭建一个。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">const fs &#x3D; require(&#39;fs&#39;)</span><br><span class="line">const path &#x3D; require(&#39;path&#39;)</span><br><span class="line">const Koa &#x3D; require(&#39;koa&#39;)</span><br><span class="line"></span><br><span class="line">const app &#x3D; new Koa()</span><br><span class="line"></span><br><span class="line">app.use(async (ctx) &#x3D;&gt; &#123;</span><br><span class="line">    const &#123; request: &#123; url &#125; &#125; &#x3D; ctx;</span><br><span class="line">    console.log(url);</span><br><span class="line">    ctx.body &#x3D; 1;</span><br><span class="line">&#125;);</span><br><span class="line"></span><br><span class="line">module.exports &#x3D; () &#x3D;&gt; &#123;</span><br><span class="line">    app.listen(3000, ()&#x3D;&gt;&#123;</span><br><span class="line">        console.log(&#39;3000端口，起飞&#39;)</span><br><span class="line">    &#125;);</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>搭建完成之后需要输出本地的index.html文件</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">app.use(async (ctx) &#x3D;&gt; &#123;</span><br><span class="line">  const &#123; request: &#123; url &#125; &#125; &#x3D; ctx;</span><br><span class="line"></span><br><span class="line">  if (url &#x3D;&#x3D;&#x3D; &#39;&#x2F;&#39;) &#123;</span><br><span class="line">    ctx.type &#x3D; &quot;text&#x2F;html&quot;;</span><br><span class="line">    process.cwd();</span><br><span class="line">    ctx.body &#x3D; fs.readFileSync(&#39;.&#x2F;index.html&#39;,&#39;utf-8&#39;);</span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure>
+
+<p>这个时候就可以获取到根目录下的index.html文件了，然后需要解析加载script标签</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">const jspath &#x3D; path.resolve(process.cwd(), url.slice(1));</span><br><span class="line">ctx.type &#x3D; &#39;application&#x2F;javascript&#39;;</span><br><span class="line">const content &#x3D; fs.readFileSync(jspath, &#39;utf-8&#39;);</span><br><span class="line">ctx.body &#x3D; content;</span><br></pre></td></tr></table></figure>
+
+<p>ok，现在支持了html和js，那么如何支持react呢</p>
+<p>首先是不是需要jsx，然后把他解析成浏览器可以识别的js<br>这里使用babel来完成这个工作</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">ctx.body &#x3D; require(&quot;@babel&#x2F;core&quot;).transformSync(content, &#123;</span><br><span class="line">    presets: [&quot;@babel&#x2F;preset-react&quot;],</span><br><span class="line">&#125;).code;</span><br></pre></td></tr></table></figure>
+
+<p>ok，成功解析，但是通过import引入的包无法找到<br>这个时候需要解析import语句，然后加载正确的包<br>这里依然通过bable来处理</p>
 <h2 id="为何使用"><a href="#为何使用" class="headerlink" title="为何使用"></a>为何使用</h2><p>作为一名业务开发人员，事件无疑是最宝贵的，因此如何利用好各种工具来提高开发效率显得十分重要。</p>
 <p>但是经常受长时间的装包，构建过程所累，寻找一种高效的本地开发工具，还有更加快速npm包拉去方案迫在眉睫。</p>
 <p>vite相较于webpack的静态打包方式，不用关心各个模块之间的关系，只需要将不同的文件解析成浏览器可以识别的语言即可。因此构建时间更短，而且esbuild使用Go语言编写，相比使用js的webpack，构建速度也有提升。</p>
