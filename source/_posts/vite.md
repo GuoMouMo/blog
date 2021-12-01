@@ -23,7 +23,7 @@ vite诞生在2020年，这一年，[ECMAScript](https://zhuanlan.zhihu.com/p/367
 
 webpack等构建工具是时代的产物，它使前端开发者们更加高效，和有条理的管理我们的项目，并且优雅的使用各种框架，不用过多考虑新语法的兼容性，通过插件系统高效的处理一系列同等问题等。对于高速发展的前端来说，具有举足轻重的地位。
 
-然而面对大型应用，需要处理的文件和代码量很多，这时传统的构建方式开始出现弊端，当我们启动一个前端项目时，需要等待数分钟或者数十分钟来等待，即使使用热更新也需要数秒。这对于一个追求极致效率的前端开发者来说是不能忍受的。因此，vite诞生了，vite旨在利用生态系统中的新进展来解决上述问题：即ESM
+然而面对大型应用，需要处理的文件和代码量很多，这时传统的构建方式开始出现弊端，当我们启动一个前端项目时，需要等待数分钟或者数十分钟来等待，即使使用热更新也需要数秒。这对于一个追求极致效率的前端开发者来说是不能忍受的。因此，vite诞生了，vite旨在利用生态系统中的新进展来解决上述问题
 
 ## 原理
 
@@ -45,7 +45,7 @@ webpack构建过程可以简单理解为，通过入口文件中的require和imp
 
 ### vite原理
 
-通过[vite中文网](https://cn.vitejs.dev/guide/why.html#slow-server-start)所述，Vite 通过在一开始将应用中的模块区分为 依赖 和 源码 两类，改进了开发服务器启动时间。
+通过[vite中文网](https://cn.vitejs.dev/guide/why.html#slow-server-start)所述，先对vite有一个认识。Vite 通过在一开始将应用中的模块区分为 依赖 和 源码 两类，改进了开发服务器启动时间。
 
 - 依赖 大多为在开发时不会变动的纯 JavaScript。一些较大的依赖（例如有上百个模块的组件库）处理的代价也很高。依赖也通常会存在多种模块化格式（例如 ESM 或者 CommonJS）。
 
@@ -53,10 +53,86 @@ webpack构建过程可以简单理解为，通过入口文件中的require和imp
 
 - 源码 通常包含一些并非直接是 JavaScript 的文件，需要转换（例如 JSX，CSS 或者 Vue/Svelte 组件），时常会被编辑。同时，并不是所有的源码都需要同时被加载（例如基于路由拆分的代码模块）。
 
-由此可以得出vite具有以下特点
+由此可以得出vite具有的特质
 - 使用ESM来处理模块之间的关系
 - 去掉打包步骤
 - 实现按需加载
+
+然后我们试想，如果是你，要用原生模块化写一个这样的工具应该怎么做。
+
+1、第一步是不是应该新建一个项目
+
+2、然后是不是应该初始化, 然后搞一个可以监控命令行的cli
+```
+npm init
+
+npm i --save cac
+```
+
+搞完这些之后，需要搞一个静态资源服务器，这里使用koa搭建一个。
+
+```
+const fs = require('fs')
+const path = require('path')
+const Koa = require('koa')
+
+const app = new Koa()
+
+app.use(async (ctx) => {
+    const { request: { url } } = ctx;
+    console.log(url);
+    ctx.body = 1;
+});
+
+module.exports = () => {
+    app.listen(3000, ()=>{
+        console.log('3000端口，起飞')
+    });
+};
+```
+
+搭建完成之后需要输出本地的index.html文件
+
+```
+app.use(async (ctx) => {
+  const { request: { url } } = ctx;
+
+  if (url === '/') {
+    ctx.type = "text/html";
+    process.cwd();
+    ctx.body = fs.readFileSync('./index.html','utf-8');
+  }
+```
+
+这个时候就可以获取到根目录下的index.html文件了，然后需要解析加载script标签
+```
+    const jspath = path.resolve(process.cwd(), url.slice(1));
+    ctx.type = 'application/javascript';
+    const content = fs.readFileSync(jspath, 'utf-8');
+    ctx.body = content;
+```
+
+ok，现在支持了html和js，那么如何支持react呢
+
+首先是不是需要jsx，然后把他解析成浏览器可以识别的js
+这里使用babel来完成这个工作
+
+```
+ctx.body = require("@babel/core").transformSync(content, {
+    presets: ["@babel/preset-react"],
+}).code;
+```
+
+ok，成功解析，但是通过import引入的包无法找到
+这个时候需要解析import语句，然后加载正确的包
+这里依然通过bable来处理
+
+
+
+
+
+
+
 
 
 ## 为何使用
